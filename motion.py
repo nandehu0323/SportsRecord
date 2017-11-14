@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+from predict import predict
 
 # Esc キー
 ESC_KEY = 0x1b
@@ -18,12 +19,13 @@ class Motion:
         # マウスイベントのコールバック登録
         cv2.setMouseCallback("motion", self.onMouse)
         # 映像
-        self.video = cv2.VideoCapture(3)
+        self.video = cv2.VideoCapture(0)
         self.interval = INTERVAL
         self.frame = None
         self.gray_next = None
         self.gray_prev = None
         self.features = None
+        self.frames = 1
 
     # メインループ
     def run(self):
@@ -46,6 +48,8 @@ class Motion:
                     x.sort()
                     y.sort()
                     output = self.gray_next[y[0]:y[1],x[0]:x[1]]
+                    if self.frames == 60:
+                        predict(output)
 
             canny_edges = cv2.Canny(output,100,200)
 
@@ -58,6 +62,10 @@ class Motion:
             end_flag, self.frame = self.video.read()
             if end_flag:
                 self.gray_next = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
+
+            self.frames += 1
+            if self.frames == 61:
+                self.frames = 1
 
             # インターバル
             key = cv2.waitKey(self.interval)
