@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 from predict import predict
+import time
 
 # Esc キー
 ESC_KEY = 0x1b
@@ -20,6 +21,7 @@ class Motion:
         cv2.setMouseCallback("motion", self.onMouse)
         # 映像
         self.video = cv2.VideoCapture(0)
+        self.video.set(5,60)
         self.interval = INTERVAL
         self.frame = None
         self.gray_next = None
