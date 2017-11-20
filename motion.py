@@ -20,14 +20,17 @@ class Motion:
         # マウスイベントのコールバック登録
         cv2.setMouseCallback("motion", self.onMouse)
         # 映像
-        self.video = cv2.VideoCapture(0)
-        self.video.set(5,60)
+        self.video = cv2.VideoCapture(2)
+        self.video.set(cv2.CAP_PROP_FPS,60)
+        self.video.set(cv2.CAP_PROP_FRAME_WIDTH,1920)
+        self.video.set(cv2.CAP_PROP_FRAME_HEIGHT,1080)
         self.interval = INTERVAL
         self.frame = None
         self.gray_next = None
         self.gray_prev = None
         self.features = None
         self.frames = 1
+        self.text = ""
 
     # メインループ
     def run(self):
@@ -58,8 +61,10 @@ class Motion:
                     pts2 = np.float32([[width,0],[0,0],[0,height],[width,height]])
                     M = cv2.getPerspectiveTransform(pts1,pts2)
                     output = cv2.warpPerspective(self.gray_next,M,(width,height))
+                    cv2.putText(self.frame, self.text, (int(pts1[1][0]), int(pts1[0][1])), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 2)
                     if self.frames == 60:
-                        predict(output)
+                        self.text = predict(output)
+
 
             canny_edges = cv2.Canny(output,100,200)
 

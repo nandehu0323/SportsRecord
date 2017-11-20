@@ -24,6 +24,6 @@ def predict(file,preprocess="thresh"):
 
     # load the image as a PIL/Pillow image, apply OCR, and then delete
     # the temporary file
-    text = pytesseract.image_to_string(Image.open(filename), config='--psm 7 --eom 3 nobatch digits')
+    text = pytesseract.image_to_string(Image.open(filename), config='--psm 7 --eom 3 nobatch digits', lang="num")
     os.remove(filename)
-    print(text)
+    return text
