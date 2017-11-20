@@ -7,7 +7,7 @@ import time
 ESC_KEY = 0x1b
 # s キー
 S_KEY = 0x73
-MAX_FEATURE_NUM = 2
+MAX_FEATURE_NUM = 4
 # インターバル （1000 / フレームレート）
 INTERVAL = 30
 
@@ -42,14 +42,22 @@ class Motion:
             output = self.gray_next
 
             if self.features is not None:
-                cv2.circle(self.frame, (self.features[0][0], self.features[0][1]), 2, (0, 0, 255), -1, 8, 0)
-                if len(self.features) == 2:
-                    cv2.rectangle(self.frame, (self.features[0][0], self.features[0][1]),(self.features[1][0], self.features[1][1]), (0, 0, 255), 2)
-                    x = [int(self.features[0][0]), int(self.features[1][0])]
-                    y = [int(self.features[0][1]), int(self.features[1][1])]
-                    x.sort()
-                    y.sort()
-                    output = self.gray_next[y[0]:y[1],x[0]:x[1]]
+                for feature in self.features:
+                    cv2.circle(self.frame, (feature[0], feature[1]), 2, (0, 0, 255), -1, 8, 0)
+                if len(self.features) == MAX_FEATURE_NUM:
+                    pts1 = self.features
+                    cv2.polylines(self.frame, [pts1.astype(np.int32)], True, (0, 0, 255), 2)
+                    if pts1[0][0] - pts1[1][0] > pts1[3][0] - pts1[2][0]:
+                        width = pts1[0][0] - pts1[1][0]
+                    else:
+                        width = pts1[3][0] - pts1[2][0]
+                    if pts1[3][1] - pts1[0][1] > pts1[2][1] - pts1[1][1]:
+                        height = pts1[3][1] - pts1[0][1]
+                    else:
+                        height = pts1[2][1] - pts1[1][1]
+                    pts2 = np.float32([[width,0],[0,0],[0,height],[width,height]])
+                    M = cv2.getPerspectiveTransform(pts1,pts2)
+                    output = cv2.warpPerspective(self.gray_next,M,(width,height))
                     if self.frames == 60:
                         predict(output)
 
@@ -98,12 +106,12 @@ class Motion:
 
     def addFeature(self, x, y):
         if self.features is None:
-            self.features = np.empty((0,2), int)
+            self.features = np.empty((0,2), float)
             self.features = np.append(self.features, np.array([[x, y]]), axis = 0).astype(np.float32)
 
         elif len(self.features) >= MAX_FEATURE_NUM:
             print("max feature num over: " + str(MAX_FEATURE_NUM))
-            self.features = np.empty((0,2), int)
+            self.features = np.empty((0,2), float)
             self.features = np.append(self.features, np.array([[x, y]]), axis = 0).astype(np.float32)
 
         else:
